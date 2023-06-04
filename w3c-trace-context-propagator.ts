@@ -43,13 +43,13 @@ export class W3CTraceContextPropagator implements TextMapPropagator<Headers> {
     const traceContext = W3TraceContext.fromHeaders(carrier);
     const { traceId, parentId, traceState, sampled } = traceContext;
 
-    const spanContext: SpanContext = {
+    const spanContext = new SpanContext(
       traceId,
-      spanId: parentId,
-      traceFlags: sampled ? TraceFlags.SAMPLED : TraceFlags.NONE,
-      traceState: traceState,
-      isRemote: true,
-    };
+      parentId,
+      sampled ? TraceFlags.SAMPLED : TraceFlags.NONE,
+      traceState,
+      true,
+    );
 
     const contextSpan = NonRecordingSpan.fromSpanContext(spanContext);
 

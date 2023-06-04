@@ -1,20 +1,15 @@
-import { describe, it } from "https://deno.land/std@0.190.0/testing/bdd.ts";
+import { addSpan, getSpan, NonRecordingSpan, SpanContext } from "./deps.ts";
 import {
   addTraceStateValue,
-  Context,
-  getEmptyTraceState,
-  getSpanId,
-  getTraceId,
-  getTraceStateValue,
-  NonRecordingSpan,
-  SpanContext,
-} from "./dev_deps.ts";
-import { W3CTraceContextPropagator } from "./w3c-trace-context-propagator.ts";
-import {
   assertEquals,
   assertNotEquals,
-} from "https://deno.land/std@0.177.1/testing/asserts.ts";
-import { addSpan, getSpan } from "./deps.ts";
+  Context,
+  describe,
+  getEmptyTraceState,
+  getTraceStateValue,
+  it,
+} from "./dev_deps.ts";
+import { W3CTraceContextPropagator } from "./w3c-trace-context-propagator.ts";
 
 describe("W3CTraceContextPropagator", () => {
   describe("fields", () => {
@@ -36,30 +31,13 @@ describe("W3CTraceContextPropagator", () => {
     });
 
     it("inserts traceparent and tracestate", () => {
-      const spanContext: SpanContext = {
-        traceId: new Uint8Array([
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9,
-          10,
-          11,
-          12,
-          13,
-          14,
-          15,
-        ]),
-        spanId: new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7]),
-        traceFlags: 0,
-        isRemote: false,
-        traceState: addTraceStateValue(getEmptyTraceState(), "foo", "bar"),
-      };
+      const spanContext = new SpanContext(
+        new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]),
+        new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7]),
+        0,
+        addTraceStateValue(getEmptyTraceState(), "foo", "bar"),
+        false,
+      );
       const contextSpan = NonRecordingSpan.fromSpanContext(spanContext);
       const context = addSpan(new Context(), contextSpan);
 
@@ -100,10 +78,10 @@ describe("W3CTraceContextPropagator", () => {
       assertNotEquals(span, null);
       const spanContext = span?.getSpanContext();
       assertEquals(
-        getTraceId(spanContext!),
+        spanContext!.getTraceId(),
         "000102030405060708090a0b0c0d0e0f",
       );
-      assertEquals(getSpanId(spanContext!), "0001020304050607");
+      assertEquals(spanContext!.getSpanId(), "0001020304050607");
       assertEquals(spanContext?.traceFlags, 0);
       assertEquals(spanContext?.isRemote, true);
       assertEquals(getTraceStateValue(spanContext!.traceState, "foo"), "bar");
